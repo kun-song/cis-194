@@ -4,7 +4,7 @@
 
 [作业说明](http://www.seas.upenn.edu/~cis194/spring15/hw/01-intro.pdf)
 
-[我的代码](chapter1/hw1.hs)
+[我的代码](./hw1.hs)
 
 ---
 
