@@ -1,7 +1,10 @@
 # CIS-194-notes
 
-宾大 [CIS 194](http://www.seas.upenn.edu/~cis194/fall16/index.html) 笔记。
+宾大 [CIS 194](http://www.seas.upenn.edu/~cis194/spring15/) 笔记。
 
-* 第一周：函数与图片
-    * [笔记](chapter1/notes.md)
-    * [练习](chapter1/homework.md)
+* Week 1 Haskell Introduction to Haskell
+    * [notes](chapter1/notes.md)
+    * [homework](chapter1/homework.md)
+* Week 2 Polymorphism and Functional Programming
+    * [notes](chapter2/notes.md)
+    * [homework](chapter2/homework.md)

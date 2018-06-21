@@ -349,7 +349,7 @@ d = 6.2e-4
 
 * `+`、`-`、`*` 可用于任意数字类型
 * `/` 仅用于浮点数
-* `div`、`mod` 仅用于整数
+* `div`、`mod` 仅用于整数（`div` 与 `/` 相似）
 * 还有 `sin`、`cos`、`log` 等函数
 
 Haskell 不允许隐式类型转换，因此需要：
@@ -405,4 +405,183 @@ Haskell 支持两种注释：
 {-
    多行注释
 -}
+```
+
+---
+
+## 定义基本函数
+
+对 1 ... n 求和：
+
+```Haskell
+sumInts :: Integer -> Integer
+sumInts 0 = 0
+sumInts n = n + sumInts (n - 1)
+```
+
+`sumInts` 有两个分支，计算时 **自上而下** 进行匹配。
+
+可以使用守卫：
+
+```Haskell
+hailstone :: Integer -> Integer
+hailstone n
+  | n `mod` 2 == 0 = n `div` 2
+  | otherwise      = 3 * n + 1
+```
+
+>`otherwise` 是 `True` 的同义词。
+
+分支 + 守卫：
+
+```Haskell
+foo :: Integer -> Integer
+foo 0 = 16
+foo 1
+  | "Haskell" > "C++" = 3
+  | otherwise         = 4
+foo n
+  | n < 0           = 0
+  | n `mod` 17 == 2 = -43
+  | otherwise       = n + 3
+```
+
+## 元组
+
+定义：
+
+```Haskell
+p :: (Int, Char)
+p = (3, 'x')
+```
+
+`(x, y)` 记号既可用于元组类型，也可用于元组值。
+
+元组的值可以通过模式匹配提取：
+
+```Haskell
+sumPair :: (Int, Int) -> Int
+sumPair (x, y) = x + y
+```
+
+当有 3、4 ... 乃至更多元素时，不要使用元组（虽然也可以使用），下周介绍合适的数据结构。
+
+## 多参函数
+
+多参函数定义：
+
+```Haskell
+f :: Int -> Int -> Int -> Int
+f x y z = x + y + z 
+```
+
+**注意**：function application has higher precedence than any infix operators，因此：
+
+```Haskell
+f 3 n + 1 7
+```
+
+被编译器解析为：
+
+```Haskell
+(f 2 n) + (1 7)
+```
+
+因此，必须写成：
+
+```Haskell
+f 3 (n + 1) 7
+```
+
+## List
+
+list 是 Haskell 中最基本的数据类型：
+
+```Haskell
+nums, range, range2 :: [Integer]
+nums = [1, 2, 3, 4]
+range = [1 .. 100]     -- [1, 2 ... 100]
+range2 = [2, 4 .. 100] -- [2, 4 ... 100]
+```
+
+字符串是字符列表，因此 `String` 不过是 `[Char]` 的别名，所有 `List` 函数都可用于 `String`：
+
+```Haskell
+hello1 :: [Char]
+hello1 = ['h', 'e', 'l', 'l', 'o']
+
+hello2 :: String
+hello2 = "hello"
+
+hello1 == hello2  -- true
+```
+
+### 构造 list
+
+最简单的 list 是空 list：
+
+```Haskell
+emptyList = []
+```
+
+其他 list 通过 cons 操作符（`:`）基于 `[]` 构造出来：
+
+```Haskell
+1 : []
+1 : (2 : [])
+1 : 2 : 3 : []
+```
+
+且 `[1, 2, 3]` 仅仅是 `1 : 2 : []` 的简写形式：
+
+```Haskell
+[1, 2, 3] == 1 : 2 : 3 : []
+```
+
+### list 函数
+
+list 函数基本可用模式匹配实现：
+
+```Haskell
+intListLength :: [Integer] -> Integer
+intListLength []       = 0
+intListLength (x : xs) = 1 + intListLength xs
+```
+
+* `(x : xs)` 中的 `()` 不能省略
+
+因为第二个分支中的 `x` 右侧没有用到，可以用 `_` 替换：
+
+```Haskell
+intListLength :: [Integer] -> Integer
+intListLength []       = 0
+intListLength (_ : xs) = 1 + intListLength xs
+```
+
+模式可以嵌套：
+
+```Haskell
+sumEveryTwo :: [Integer] -> [Integer]
+sumEveryTwo [] = []
+sumEveryTwo (x : []) = [x]
+sumEveryTwo (x : y : xs) = (x + y) : sumEveryTwo xs
+```
+
+## 组合函数
+
+Haskell 鼓励先写简单的、功能单一的小函数，然后将它们组合成更复杂的函数：
+
+```Haskell
+-- The number of hailstone steps needed to reach 1 from a starting number.
+hailstoneLen :: Integer -> Integer
+hailstoneLen n = intListLength (hailstoneSeq n) - 1
+
+hailstone :: Integer -> Integer
+hailstone n
+  | n `mod` 2 == 0 = n `div` 2
+  | otherwise      = 3 * n + 1
+
+hailstoneSeq :: Integer -> [Integer]
+hailstoneSeq 1 = [1]
+hailstoneSeq n = n : hailstoneSeq (hailstone n)
 ```
