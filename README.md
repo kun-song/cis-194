@@ -11,3 +11,6 @@
 * Week 3 Algebraic data types
     * [notes](chapter3/notes.md)
     * [homework](chapter3/homework.md)
+* Week 4 Type Classes
+    * [notes](chapter4/notes.md)
+    * [homework](chapter4/homework.md)
