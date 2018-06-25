@@ -94,3 +94,80 @@ class Eq a where
 
 因此，实现 `Eq` instance 时，可以实现 `(==)` 或 `(/=)` 任意一个，但如果没有显示任何一个，会陷入死循环。
 
+事实上，`Eq` type class 比较特殊，GHC 可以自动为它生成 instance：
+
+```Haskell
+data Foo = F Int | G Char
+  deriving (Show, Eq, Ord)
+```
+
+`deriving` 告诉 GHC 自动为 `Show`、`Eq` 和 `Ord` 3 个 type class 生成 instance。`deriving` 默认只能用于几个 Haskell 内置的 type class：
+
+* `Eq`
+* `Enum`
+* `Ord`
+* `Ix`
+* `Bounded`
+* `Show`
+* `Read`
+
+并且并非可以为任意类型生成这些 type class 的实例。
+
+>GHC does provide extensions that allow other classes to be derived; see the GHC manual for details.
+
+### Type classes vs Java 接口
+
+type class 与 Java 接口乍一看很像：都定义了一组操作，且有实例实现这些操作。但 type class 比接口更加通用：
+
+* type class 通常会定义一组 **数学法则**，所有实例必须遵守
+  + 例如 `Num` 定义的结合律、交换律
+* Java 类定义时，必须先声明它实现的接口，而 type class instance 的声明与对应的 type 没有关系，甚至可以放到不同模块中
+* type class method 中的类型更加灵活
+
+关于第 3 点，考虑：
+
+```Haskell
+class Blerg a b where
+  blerg :: a -> b
+```
+
+编译器需要根据 `a` 和 `b` 两个类型决定选用哪个 `blerg` 实现，而 Java 很难做到这点。
+
+另外，Haskell 有函数依赖（Functional Dependencies）的概念，例如从容器中抽取一个元素：
+
+```Haskell
+class Extract a b | a -> b where
+  extract :: a -> b
+```
+
+通过函数依赖，表明 type a uniquely determines b。
+
+可以定义一个从 tuple 中提取第一个元素的 type class instance：
+
+```Haskell
+instance Extract (a, b) a where
+  extract (x, y) = x
+```
+
+但无法定义：
+
+```Haskell
+instance Extract (a, b) b where...
+```
+
+Haskell 也更容易处理二元函数：
+
+```Haskell
+class Num a where
+  (+) :: a -> a -> a
+  ...
+```
+
+### 标准库 type class
+
+* [Ord](http://hackage.haskell.org/package/base-4.7.0.2/docs/Prelude.html#t:Ord) 定义了 `<` `<=` `>` 等函数
+* [Num](http://hackage.haskell.org/package/base-4.7.0.2/docs/Prelude.html#t:Num) 表示数字类型，定义加减乘等函数
+* [Show](http://hackage.haskell.org/package/base-4.7.0.2/docs/Prelude.html#t:Show) 定义 `show` 函数，将值转换为字符串表示，GHC 用它输出显示
+* [Read](http://hackage.haskell.org/package/base-4.7.0.2/docs/Prelude.html#t:Read) 与 `Show` 相反
+* [Inegral](http://hackage.haskell.org/package/base-4.7.0.2/docs/Prelude.html#t:Integral) 表示整数，支持除法
+
