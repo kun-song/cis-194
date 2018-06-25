@@ -171,3 +171,119 @@ class Num a where
 * [Read](http://hackage.haskell.org/package/base-4.7.0.2/docs/Prelude.html#t:Read) 与 `Show` 相反
 * [Inegral](http://hackage.haskell.org/package/base-4.7.0.2/docs/Prelude.html#t:Integral) 表示整数，支持除法
 
+## Monoids
+
+类型 `m` 和操作 `(<>) :: m -> m -> m` 组成 monoid type class，且必须满足：
+
+* 存在特殊元素 `mempty`，满足：`mempty <> x == x` 且 `x <> mempty == x`
+* `<>` 满足结合律，即 `(a <> b) <> c == a <> (b <> c)`
+
+Monoid 概念源于范畴轮，但在编程中 monoid 也随处可见（任何语言），但通过使用 type class，monoid 在 Haskell 非常显眼：
+
+```Haskell
+class Monoid' m where
+  mempty' :: m
+  mappend' :: m -> m -> m
+
+  mconcat :: [m] -> m
+  mconcat = foldr mappend' mempty'
+
+  (<>) :: Monoid' m => m -> m -> m
+  (<>) = mappend'
+```
+
+* `mconcat` 通过 `mappend` 和 `mempty` 定义，定义 Monoid 实例时，可以省略 `mconcat` 函数
+* `<>` 与 `mappend` 等价，不过是中缀操作符，更加方便
+* `GHC.base` 已经定义有 `Monoid`，所以这里用 `Monoid'`
+
+最常见的 `Monoid` 实例可能是 list：
+
+```Haskell
+instance Monoid' [a] where
+  mempty'  = []
+  mappend' = (++)
+```
+
+`Monoid` 用于将两个元素结合成一个，但元素的类型，以及 **结合方式** 可能多种多样：
+
+```Haskell
+intInts :: Monoid' m => (Integer -> m) -> m
+intInts make_m = aux [1 .. 100]
+  where aux []       = mempty'
+        aux (x : xs)
+          | x `mod` 3 == 0 = mappend' (make_m x) (aux xs)
+          | otherwise      = aux xs
+```
+
+* `make_m` 参数将 `Integer` 转换为 `m`。
+
+结合方式一：可以将 `intInts` 结果作为 list：
+
+```Haskell
+intIntsList :: [Integer]
+-- [3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57,60,63,66,69,72,75,78,81,84,87,90,93,96,99]
+intIntsList = intInts (:[])
+```
+
+* `(:[])` 将 `:` 应用于空表 `[]`，与 `\x -> [x]` 等价。
+
+结合方式二：将 `intInts` 结果以乘积方式组合：
+
+```Haskell
+intIntsProduct :: Integer
+intIntsProduct = intInts id
+```
+
+`id` 类型为 `a -> a`，因此 `intIntsProduct` 需要有 `Monoid Integer` 实例。
+
+数字类型有多种 monoidically 的组合方式，因此 Haskell 没有提供任何一种，而是通过 `Data.Monoid` 模块导出两个对数字类型的 wrapper，这两个 wrapper 都有对应的 `Monoid` 实例，`Product` 即为其中一个 wrapper：
+
+```Haskell
+data Product a = Product a
+instance Num a => Monoid (Product a) where
+  mempty  = Product 1
+  mappend (Product x) (Product y) = Product (x * y)
+
+getProduct :: Product a -> a
+getProduct (Product x) = x
+```
+
+重新定义 `intIntsProduct`：
+
+```Haskell
+intIntsProduct' :: Integer
+-- 48271088561613960642858365853327381832862269440000000
+intIntsProduct' = getProduct $ intInts Product
+```
+
+因为对于每个 type，只能定义一个 type class 实例，但有的 type 有多种合理的组合方式（比如 `Integer`），这些组合方式都非常有用，可以用类似 `Prodcut` 这样的包装类来避免该限制。
+
+## Functor
+
+```Haskell
+class Functor' f where
+  fmap :: (a -> b) -> f a -> f b
+```
+
+看几个 `Functor` 实例：
+
+```Haskell
+instance Functor' [] where
+  fmap = map
+
+instance Functor' Maybe where
+  fmap _ Nothing  = Nothing
+  fmap f (Just x) = Just (f x)
+```
+
+注意 `Functor` 的参数并非单纯的 type，而是 type constructor，即 `f` 的 kind 为 `* -> *`。
+
+`fmap` 接受一个普通函数 `a -> b`，将它 lift 成作用在 `Functor` 上的 `f a -> f b`。
+
+可以将 `Functor` 想象成非常通用的“容器”（`f a`），容器可以有多种 **形状**（`Option`，`Tree` 等形状不同），`fmap` 在 **不改变容器形状** 的前提下，修改容器内的元素。
+
+例如，容器是树时，`fmap` 可以改变结点内的值，但整颗树的形状保持不变！
+
+当不知道容器形状时，大家更喜欢用 `(<$>)` 而非 `fmap`。
+
+>`fmap` 应用于二叉查找树时，仅保证树形状不变，但元素之间的顺序可能被影响！
