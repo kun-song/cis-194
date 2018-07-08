@@ -13,4 +13,7 @@
 * Week 4 Type Classes
     * [notes](chapter4/notes.md)
     * [homework](chapter4/homework.md)
+* Week 5 IO
+    * [notes](chapter5/notes.md)
+    * [homework](chapter5/homework.md)
 
