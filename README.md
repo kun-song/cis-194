@@ -17,3 +17,6 @@
 * Week 5 IO
     * [notes](chapter5/notes.md)
     * [homework](chapter5/homework.md)
+* Week 6 Being Lazy with Class
+    * [notes](chapter6/notes.md)
+    * [homework](chapter6/homework.md)
